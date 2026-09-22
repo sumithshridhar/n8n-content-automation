@@ -1,0 +1,1264 @@
+{
+  "name": "Faceless YT Shorts Factory FINAL",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6a90a5e3-7308-4ee0-b9c3-4d5c247d2952",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3280,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "id": "e3fa617d-ed5a-409e-9718-58f2a2caeda3",
+      "name": "Chaos Seed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3008,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/r/{{$json[\"subreddit\"]}}/hot.json?limit=30",
+        "options": {
+          "timeout": 30000
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "User-Agent",
+              "value": "ViralBot/2.0"
+            }
+          ]
+        }
+      },
+      "id": "5c182fff-3cd1-4c18-ab00-d94fcaeb5f28",
+      "name": "Reddit Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        -2800,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript"
+      },
+      "id": "f29d3898-c3c9-4127-8fdc-d6dd7a416c97",
+      "name": "Filter Viral Posts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2560,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "id": "b2e97e0b-d8ba-4c4e-97d3-7812b8fe81a1",
+      "name": "Visual Director",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -2320,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "id": "b0d44e05-59cb-49fe-a443-2ef78ee79fca",
+      "name": "Script Writer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -2080,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "id": "f72b47f0-6319-46ca-a858-653f884e4c36",
+      "name": "AI Critic",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -1840,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript"
+      },
+      "id": "af5be2a6-08c5-49af-9d5f-a265f53ae602",
+      "name": "Quality Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "id": "31b7f849-c625-4ae7-ab01-e70bdc823aca",
+      "name": "Scene Splitter",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -1360,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript"
+      },
+      "id": "7085d470-bc39-4cfd-a89c-20e7ed44b9b0",
+      "name": "JSON Parser",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript"
+      },
+      "id": "76795474-33ad-4a4c-bcb5-d2a1e4142f5e",
+      "name": "Split Scenes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a7de1bf9-8bf7-41e7-90d9-17a870ccaab5",
+      "name": "Loop Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -640,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && python \"C:\\\\Users\\\\Sumith Shridhar\\\\OneDrive\\\\Desktop\\\\my-first-ai-project\\\\scripts\\\\generate_voice_kokoro.py\" \"{{$json[\"sentence\"] ? $json[\"sentence\"].replace(/\"/g, \"'\").replace(/\\n/g, ' ') : ''}}\" \"{{$json[\"base_folder\"]}}\\\\{{$json[\"audio_filename\"]}}\" \"am_adam\""
+      },
+      "id": "2692ded3-5e2a-4cd2-8b75-e1a9a160f4e0",
+      "name": "Generate TTS Audio",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/videos/search?query={{$json[\"pexels_query\"]}}&per_page=15&orientation=portrait",
+        "options": {
+          "timeout": 30000
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "YOUR_PEXELS_API_KEY"
+            }
+          ]
+        }
+      },
+      "id": "c8c6090e-b83e-447d-a5c9-e99f35e4e443",
+      "name": "Pexels Video Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript"
+      },
+      "id": "d88c64a9-788b-497c-a722-a4ab745b77c7",
+      "name": "Smart Media Picker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && {{$json[\"download_command\"]}}"
+      },
+      "id": "f4057d63-6ed0-45e0-93c1-7234ee9793ab",
+      "name": "Execute Download",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript"
+      },
+      "id": "467025d8-ccbf-4069-a71b-20ea181a2521",
+      "name": "Prep Merge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && {{$json[\"merge_command\"]}}"
+      },
+      "id": "bb093f79-aec4-4565-9c69-c988a2611022",
+      "name": "Execute Merge",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "language": "JavaScript"
+      },
+      "id": "10f2fb23-1be5-481c-b50d-9a4b68482215",
+      "name": "ASS Subtitle Generator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && powershell -NoProfile -Command \"Get-ChildItem 'part_*.mp4' | Sort-Object Name | ForEach-Object { \\\"file '$($_.Name)'\\\" } | Set-Content list.txt\" && powershell -NoProfile -Command \"Invoke-WebRequest -Uri '{{$json[\"music_url\"]}}' -OutFile 'background_music.mp3' -Headers @{'User-Agent'='Mozilla/5.0'}\" && ffmpeg -y -f concat -safe 0 -i list.txt -c:v libx264 -pix_fmt yuv420p -preset ultrafast -c:a aac temp_stitch.mp4 && ffmpeg -y -i temp_stitch.mp4 -map 0:a -c:a libmp3lame -q:a 2 full_audio.mp3 && powershell -NoProfile -Command \"[System.IO.File]::WriteAllBytes('gen_subs.py',[System.Convert]::FromBase64String('{{$json[\"b64_script\"]}}'))\" && python gen_subs.py"
+      },
+      "id": "33c6fa0c-6331-4bcf-910f-99422406f169",
+      "name": "Stitch + Generate Subtitles",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && ffmpeg -y -i temp_stitch.mp4 -stream_loop -1 -i background_music.mp3 -filter_complex \"[1:a]volume=0.15[bgm];[0:a][bgm]amix=inputs=2:duration=first[a];[0:v]vignette=PI/4,eq=contrast=1.1:saturation=0.9[v]\" -map \"[v]\" -map \"[a]\" -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac temp_pre_sub.mp4 && ffmpeg -y -i temp_pre_sub.mp4 -vf \"ass=subs.ass\" -c:v libx264 -pix_fmt yuv420p -c:a copy Final_Video_Captioned.mp4"
+      },
+      "id": "1f379247-ba14-4c32-97b6-797624d99a6b",
+      "name": "Final Mix + Caption Burn",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        80,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && powershell -NoProfile -Command \"$now = Get-Date; $ts = $now.ToString('yyyy-MM-dd_HH-mm-ss'); New-Item -ItemType Directory -Path 'C:\\\\reddit vids n8n\\\\final' -Force | Out-Null; Copy-Item -Path 'Final_Video_Captioned.mp4' -Destination (\\\"C:\\\\reddit vids n8n\\\\final\\\\Reddit_Video_${ts}.mp4\\\") -Force; Remove-Item -Force -ErrorAction SilentlyContinue *.mp3, *.ass, *.srt, *.txt, *.py, part_*.mp4, temp_*.mp4, scene_*.mp4, Final_Video_Captioned.mp4\""
+      },
+      "id": "92ee3f6b-3594-4a53-b517-fc9c4d0fb80e",
+      "name": "Archive & Cleanup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        320,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2032,
+        368
+      ],
+      "id": "525b01e8-cc8e-4106-901b-0b77923e8f8f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KEKLhfFYc8o1GDhl",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.reddit",
+      "typeVersion": 1,
+      "position": [
+        -2800,
+        432
+      ],
+      "id": "d52794a0-1031-49d0-b56e-c3e098f4e4e2",
+      "name": "Get many posts",
+      "credentials": {
+        "redditOAuth2Api": {
+          "id": "4OysTX8Bmc34F4U1",
+          "name": "Reddit account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "dc484ec4-c9ed-4a2e-8c09-463b9a2f6af3",
+      "name": "Model: Vision",
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -2032,
+        1232
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 1
+        }
+      },
+      "id": "1a1779a7-b373-409f-adce-2fc19eb2008a",
+      "name": "Model: Creative",
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        1232
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "b4ddcd20-64a6-4cf8-b7aa-91ccea17ce75",
+      "name": "Model: Critic",
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        1232
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "27f58ea7-d9b2-40d9-8676-4b71b7051a4f",
+      "name": "Model: Logic",
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        1232
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && mkdir \"C:\\\\reddit vids n8n\\\\final\" 2>nul & copy /y \"C:\\\\reddit vids n8n\\\\satisfying\\\\Final_Video_Captioned.mp4\" \"C:\\\\reddit vids n8n\\\\final\\\\Reddit_Video_{{ $now.format('yyyy-MM-dd_HH-mm-ss') }}.mp4\" && del /q *.mp3 *.ass *.srt *.txt *.py 2>nul & del /q part_*.mp4 temp_*.mp4 scene_*.mp4 Final_Video_Captioned.mp4 2>nul"
+      },
+      "id": "af45aa4b-5ed0-45d3-90e8-b2b1cb7297f7",
+      "name": "Archive and Cleanup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        368,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const subreddits = ['psychology','todayilearned','interestingasfuck','Showerthoughts','explainlikeimfive','LifeProTips'];\nconst hooks = [\n  \"Psychology says if you can't stop thinking about someone...\",\n  \"Your brain is lying to you right now.\",\n  \"People who do THIS are secretly genius.\",\n  \"If someone does this, they secretly like you.\",\n  \"The dark truth about your personality.\",\n  \"Scientists can't explain why this happens.\",\n  \"Only 2% of people know this about their brain.\",\n  \"If you wake up between 3 and 5 AM...\",\n  \"Your subconscious is trying to tell you something.\",\n  \"The thing nobody tells you about intelligence.\",\n  \"This psychological trick works on everyone.\",\n  \"People who talk to themselves are actually...\",\n  \"Your dreams are trying to warn you.\",\n  \"The real reason you feel tired all the time.\",\n  \"What your handwriting says about your personality.\"\n];\nconst musicUrls = [\n  \"https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Kai_Engel/Satin/Kai_Engel_-_07_-_Satin.mp3\",\n  \"https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/Chad_Crouch/Arps/Chad_Crouch_-_Shipping_Lanes.mp3\",\n  \"https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/Broke_For_Free/Directionless_EP/Broke_For_Free_-_01_-_Night_Owl.mp3\"\n];\nconst seed = Math.floor(Math.random() * 1000000);\nconst subreddit = subreddits[Math.floor(Math.random() * subreddits.length)];\nconst hook = hooks[Math.floor(Math.random() * hooks.length)];\nconst music_url = musicUrls[Math.floor(Math.random() * musicUrls.length)];\nreturn [{ json: { seed, subreddit, hook, music_url, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "26e0973d-df4d-477e-9d49-bf9a0e120137",
+      "name": "Chaos Seed1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2752,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.reddit.com/r/{{ $json.subreddit }}/hot.json?limit=30",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "ViralBot/2.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4f65ee4c-f3e1-4b7d-b798-42dc5546fb68",
+      "name": "Reddit Scraper1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2512,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all()[0].json;\nconst posts = (inputData.data && inputData.data.children) ? inputData.data.children : [];\nconst chaosData = $('Chaos Seed1').first().json;\nconst fallbackTopics = [\n  \"The psychological reason you can't fall asleep at night\",\n  \"Why your brain replays embarrassing memories\",\n  \"The hidden power of introversion\",\n  \"Why smart people doubt themselves more\",\n  \"The science of why music gives you chills\",\n  \"How your childhood shapes your adult relationships\",\n  \"The real meaning behind your recurring dreams\"\n];\nconst qualifying = posts.filter(p => p.data.ups >= 1000 && !p.data.stickied && !p.data.over_18 && p.data.title);\nlet topic;\nif (qualifying.length > 0) {\n  const top10 = qualifying.slice(0, 10);\n  topic = top10[Math.floor(Math.random() * top10.length)].data.title;\n} else {\n  topic = fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];\n}\nreturn [{ json: { topic, hook: chaosData.hook, music_url: chaosData.music_url, seed: chaosData.seed } }];"
+      },
+      "id": "c54d7563-5ffb-4037-a998-a0a2d59e6cc3",
+      "name": "Filter Viral Posts1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2272,
+        1008
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a2f2abde-bad3-4cb6-86cc-221bbc7ae289",
+      "name": "Visual Director1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -2032,
+        1008
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c268918e-9f40-4043-bd4c-97af7f0c8ff1",
+      "name": "Script Writer1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -1792,
+        1008
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1437aa03-81a1-4078-8989-4ecb1f036c98",
+      "name": "AI Critic1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -1552,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let rawCritic = '';\ntry { rawCritic = $input.first().json.text || $input.first().json.output || ''; } catch(e) {}\nconst cleanedCritic = rawCritic.replace(/<think>[\\s\\S]*?<\\/think>/gi, '').trim();\nlet script = '';\ntry { script = $('Script Writer1').first().json.text || $('Script Writer1').first().json.output || ''; } catch(e) {}\nconst cleanScript = script.replace(/<think>[\\s\\S]*?<\\/think>/gi, '').trim();\nlet music_url = '';\ntry { music_url = $('Filter Viral Posts1').first().json.music_url || ''; } catch(e) {}\nreturn [{ json: { script: cleanScript, music_url, critic_output: cleanedCritic, approved: true } }];"
+      },
+      "id": "98a9c7aa-7765-4cec-a669-dfba014d7a04",
+      "name": "Quality Gate1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        1008
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "4662ea77-3fa6-4121-aa00-1c4c66b82095",
+      "name": "Scene Splitter1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -1072,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const visualMap = {\n  brain: \"neural network abstract\", mind: \"galaxy mind cosmic\", glitch: \"glitch art video\",\n  void: \"black void abstract\", hallway: \"dark hallway endless\", ocean: \"deep ocean dark\",\n  space: \"deep space stars nebula\", abstract: \"abstract geometric 3d\", galaxy: \"galaxy spiral stars\",\n  neon: \"neon lights city\", fire: \"fire flames slow motion\", water: \"water droplet macro\",\n  smoke: \"smoke dark background\", static: \"tv static noise\", calm: \"calm nature loop\"\n};\nconst fallbackScenes = [\n  { index:1, sentence:\"Your brain processes 11 million bits of information every second.\", visual:\"neural network abstract\" },\n  { index:2, sentence:\"But you are only aware of about 40 bits.\", visual:\"black void abstract\" },\n  { index:3, sentence:\"Your subconscious is running the show.\", visual:\"abstract geometric 3d\" },\n  { index:4, sentence:\"And it has been doing this your entire life.\", visual:\"galaxy spiral stars\" },\n  { index:5, sentence:\"Follow for more mind-bending facts.\", visual:\"neon lights city\" }\n];\nlet raw = '';\ntry { raw = $input.first().json.text || $input.first().json.output || ''; } catch(e) {}\nlet music_url = '';\ntry { music_url = $('Quality Gate1').first().json.music_url || ''; } catch(e) {}\nraw = raw.replace(/<think>[\\s\\S]*?<\\/think>/gi, '').trim();\nraw = raw.replace(/```json\\s*/gi, '').replace(/```\\s*/gi, '').trim();\nconst jsonMatch = raw.match(/\\{[\\s\\S]*\\}/);\nif (jsonMatch) raw = jsonMatch[0];\nlet scenes;\ntry {\n  const parsed = JSON.parse(raw);\n  scenes = parsed.scenes || parsed;\n  if (!Array.isArray(scenes)) throw new Error('not array');\n  scenes = scenes.slice(0, 6).map((s, i) => {\n    const k = (s.visual || '').toLowerCase().trim();\n    return { index: s.index || (i+1), sentence: s.sentence || s.text || '', visual: visualMap[k] || s.visual || 'abstract geometric 3d' };\n  }).filter(s => s.sentence.length > 0);\n  if (scenes.length === 0) throw new Error('empty');\n} catch(e) { scenes = fallbackScenes; }\nreturn [{ json: { scenes, music_url } }];"
+      },
+      "id": "673f93f8-6ef3-4d8b-89ff-359b66f4a934",
+      "name": "JSON Parser1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { scenes, music_url } = $input.first().json;\nconst base_folder = 'C:\\\\reddit vids n8n\\\\satisfying';\nreturn scenes.map(scene => ({ json: {\n  index: scene.index, sentence: scene.sentence, visual: scene.visual,\n  base_folder, audio_filename: 'audio_' + scene.index + '.mp3',\n  visual_filename: 'scene_' + scene.index + '_visual.mp4',\n  music_url, total_scenes: scenes.length\n}}));"
+      },
+      "id": "efbcd01f-737b-4443-a6c3-802a73e2d593",
+      "name": "Split Scenes1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "33b5e5a9-07e1-4ec1-8d28-44d7c3871511",
+      "name": "Loop Batches1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -352,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && python \"C:\\\\Users\\\\Sumith Shridhar\\\\OneDrive\\\\Desktop\\\\my-first-ai-project\\\\scripts\\\\generate_voice_kokoro.py\" \"{{ $json.sentence.replace(/[\\\"\\n\\r]/g, function(m){ return m === '\\\"' ? \"'\" : ' '; }) }}\" \"{{ $json.base_folder }}\\\\{{ $json.audio_filename }}\" \"am_adam\""
+      },
+      "id": "6ca7f1a2-f59b-44af-b4ab-61a3d6e36a96",
+      "name": "Generate TTS Audio1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/videos/search?query={{ encodeURIComponent($('Split Scenes1').item.json.visual) }}&per_page=15&orientation=portrait",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "YOUR_PEXELS_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8a462e12-c8f6-4d9a-82c0-cd0b7d1d3d3f",
+      "name": "Pexels Video Search1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const pexelsData = $input.first().json;\nconst sceneItem = $('Split Scenes1').item.json;\nconst { index, base_folder, visual_filename, audio_filename, sentence, music_url, total_scenes } = sceneItem;\nconst outputPath = base_folder + '\\\\' + visual_filename;\nconst videos = pexelsData.videos || [];\nconst hdVideos = videos.filter(v => (v.video_files||[]).some(f => f.quality === 'hd' && f.width >= 720));\nconst pool = hdVideos.length > 0 ? hdVideos : videos;\nlet downloadCommand;\nif (pool.length > 0) {\n  const picked = pool[Math.floor(Math.random() * pool.length)];\n  const files = picked.video_files || [];\n  const hdFile = files.find(f => f.quality === 'hd' && f.width >= 720) || files[0];\n  const url = hdFile ? hdFile.link : '';\n  downloadCommand = url\n    ? `powershell -c \"Invoke-WebRequest -Uri '${url}' -OutFile '${outputPath}' -Headers @{'User-Agent'='Mozilla/5.0'}\"`\n    : `ffmpeg -y -f lavfi -i \"color=c=purple:s=720x1280:d=8\" -c:v libx264 -pix_fmt yuv420p \"${outputPath}\"`;\n} else {\n  downloadCommand = `ffmpeg -y -f lavfi -i \"color=c=purple:s=720x1280:d=8\" -c:v libx264 -pix_fmt yuv420p \"${outputPath}\"`;\n}\nreturn [{ json: { downloadCommand, outputPath, index, base_folder, audio_filename, visual_filename, sentence, music_url, total_scenes } }];"
+      },
+      "id": "72651aea-33a5-4846-8fc1-e5f63182636c",
+      "name": "Smart Media Picker1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && {{ $json.downloadCommand }}"
+      },
+      "id": "4388301c-49b1-4c22-ac66-8de984e88869",
+      "name": "Execute Download1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        608,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { base_folder, index, music_url, total_scenes } = $input.first().json;\nconst audioPath = base_folder + '\\\\audio_' + index + '.mp3';\nconst visualPath = base_folder + '\\\\scene_' + index + '_visual.mp4';\nconst outputPart = base_folder + '\\\\part_' + index + '.mp4';\nconst mergeCommand = `cd /d \"${base_folder}\" && ffmpeg -y -stream_loop -1 -i \"${visualPath}\" -i \"${audioPath}\" -map 0:v -map 1:a -vf \"scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,setsar=1:1,eq=contrast=1.1:brightness=-0.05:saturation=0.9\" -c:v libx264 -preset ultrafast -r 30 -c:a aac -shortest \"${outputPart}\"`;\nreturn [{ json: { mergeCommand, music_url, total_scenes, base_folder } }];"
+      },
+      "id": "2ca12cb6-15df-4692-a2ed-fa07e364bf64",
+      "name": "Prep Merge1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ $json.mergeCommand }}"
+      },
+      "id": "e0512051-60fb-47f2-b482-9cc1737dfe83",
+      "name": "Execute Merge1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b64_script = \"aW1wb3J0IHN5cwppbXBvcnQgb3MKCnRyeToKICAgIGltcG9ydCB3aGlzcGVyCiAgICBtb2RlbCA9IHdoaXNwZXIubG9hZF9tb2RlbCgiYmFzZSIpCiAgICByZXN1bHQgPSBtb2RlbC50cmFuc2NyaWJlKCJmdWxsX2F1ZGlvLm1wMyIsIHdvcmRfdGltZXN0YW1wcz1UcnVlKQoKICAgIGRlZiBmb3JtYXRfdGltZShzZWNvbmRzKToKICAgICAgICBoID0gaW50KHNlY29uZHMgLy8gMzYwMCkKICAgICAgICBtID0gaW50KChzZWNvbmRzICUgMzYwMCkgLy8gNjApCiAgICAgICAgcyA9IHNlY29uZHMgJSA2MAogICAgICAgIHJldHVybiBmIntofTp7bTowMmR9OntzOjA1LjJmfSIKCiAgICBhc3NfaGVhZGVyID0gIltTY3JpcHQgSW5mb11cblNjcmlwdFR5cGU6IHY0LjAwK1xuUGxheVJlc1g6IDcyMFxuUGxheVJlc1k6IDEyODBcblNjYWxlZEJvcmRlckFuZFNoYWRvdzogeWVzXG5cbltWNCsgU3R5bGVzXVxuRm9ybWF0OiBOYW1lLCBGb250bmFtZSwgRm9udHNpemUsIFByaW1hcnlDb2xvdXIsIFNlY29uZGFyeUNvbG91ciwgT3V0bGluZUNvbG91ciwgQmFja0NvbG91ciwgQm9sZCwgSXRhbGljLCBVbmRlcmxpbmUsIFN0cmlrZU91dCwgU2NhbGVYLCBTY2FsZVksIFNwYWNpbmcsIEFuZ2xlLCBCb3JkZXJTdHlsZSwgT3V0bGluZSwgU2hhZG93LCBBbGlnbm1lbnQsIE1hcmdpbkwsIE1hcmdpblIsIE1hcmdpblYsIEVuY29kaW5nXG5TdHlsZTogRGVmYXVsdCxJbXBhY3QsNDgsJkgwMDAwRkZGRiwmSDAwMDAwMEZGLCZIMDAwMDAwMDAsJkg4MDAwMDAwMCwxLDAsMCwwLDEwMCwxMDAsMCwwLDEsMywxLDIsMTAsMTAsNTAsMVxuXG5bRXZlbnRzXVxuRm9ybWF0OiBMYXllciwgU3RhcnQsIEVuZCwgU3R5bGUsIE5hbWUsIE1hcmdpbkwsIE1hcmdpblIsIE1hcmdpblYsIEVmZmVjdCwgVGV4dFxuIgoKICAgIGV2ZW50cyA9IFtdCiAgICBzZWdtZW50cyA9IHJlc3VsdC5nZXQoInNlZ21lbnRzIiwgW10pCiAgICBmb3Igc2VnIGluIHNlZ21lbnRzOgogICAgICAgIHdvcmRzID0gc2VnLmdldCgid29yZHMiLCBbXSkKICAgICAgICBmb3IgaSBpbiByYW5nZSgwLCBsZW4od29yZHMpLCAyKToKICAgICAgICAgICAgY2h1bmsgPSB3b3Jkc1tpOmkrMl0KICAgICAgICAgICAgaWYgbm90IGNodW5rOgogICAgICAgICAgICAgICAgY29udGludWUKICAgICAgICAgICAgc3RhcnQgPSBjaHVua1swXS5nZXQoInN0YXJ0Iiwgc2VnWyJzdGFydCJdKQogICAgICAgICAgICBlbmQgPSBjaHVua1stMV0uZ2V0KCJlbmQiLCBzZWcuZ2V0KCJlbmQiLCBzdGFydCArIDEpKQogICAgICAgICAgICBsaW5lID0gIiIKICAgICAgICAgICAgZm9yIHcgaW4gY2h1bms6CiAgICAgICAgICAgICAgICB3X3N0YXJ0ID0gdy5nZXQoInN0YXJ0Iiwgc3RhcnQpCiAgICAgICAgICAgICAgICB3X2VuZCA9IHcuZ2V0KCJlbmQiLCBlbmQpCiAgICAgICAgICAgICAgICBkdXIgPSBtYXgoMSwgaW50KCh3X2VuZCAtIHdfc3RhcnQpICogMTAwKSkKICAgICAgICAgICAgICAgIHdvcmRfdGV4dCA9IHcuZ2V0KCJ3b3JkIiwgIiIpLnN0cmlwKCkKICAgICAgICAgICAgICAgIGxpbmUgKz0gIntcXGsiICsgc3RyKGR1cikgKyAifSIgKyB3b3JkX3RleHQgKyAiICIKICAgICAgICAgICAgZXZlbnRzLmFwcGVuZChmIkRpYWxvZ3VlOiAwLHtmb3JtYXRfdGltZShzdGFydCl9LHtmb3JtYXRfdGltZShlbmQpfSxEZWZhdWx0LCwwLDAsMCwse2xpbmUuc3RyaXAoKX0iKQoKICAgIHdpdGggb3Blbigic3Vicy5hc3MiLCAidyIsIGVuY29kaW5nPSJ1dGYtOCIpIGFzIGY6CiAgICAgICAgZi53cml0ZShhc3NfaGVhZGVyKQogICAgICAgIGYud3JpdGUoIlxuIi5qb2luKGV2ZW50cykpCiAgICBwcmludCgiU1VDQ0VTUzogU3VidGl0bGVzIGdlbmVyYXRlZCIpCgpleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICBwcmludChmIldoaXNwZXIgZmFpbGVkOiB7ZX0uIFVzaW5nIGZhbGxiYWNrLiIpCiAgICBmYWxsYmFjayA9ICJbU2NyaXB0IEluZm9dXG5TY3JpcHRUeXBlOiB2NC4wMCtcblBsYXlSZXNYOiA3MjBcblBsYXlSZXNZOiAxMjgwXG5TY2FsZWRCb3JkZXJBbmRTaGFkb3c6IHllc1xuXG5bVjQrIFN0eWxlc11cbkZvcm1hdDogTmFtZSwgRm9udG5hbWUsIEZvbnRzaXplLCBQcmltYXJ5Q29sb3VyLCBTZWNvbmRhcnlDb2xvdXIsIE91dGxpbmVDb2xvdXIsIEJhY2tDb2xvdXIsIEJvbGQsIEl0YWxpYywgVW5kZXJsaW5lLCBTdHJpa2VPdXQsIFNjYWxlWCwgU2NhbGVZLCBTcGFjaW5nLCBBbmdsZSwgQm9yZGVyU3R5bGUsIE91dGxpbmUsIFNoYWRvdywgQWxpZ25tZW50LCBNYXJnaW5MLCBNYXJnaW5SLCBNYXJnaW5WLCBFbmNvZGluZ1xuU3R5bGU6IERlZmF1bHQsSW1wYWN0LDQ4LCZIMDAwMEZGRkYsJkgwMDAwMDBGRiwmSDAwMDAwMDAwLCZIODAwMDAwMDAsMSwwLDAsMCwxMDAsMTAwLDAsMCwxLDMsMSwyLDEwLDEwLDUwLDFcblxuW0V2ZW50c11cbkZvcm1hdDogTGF5ZXIsIFN0YXJ0LCBFbmQsIFN0eWxlLCBOYW1lLCBNYXJnaW5MLCBNYXJnaW5SLCBNYXJnaW5WLCBFZmZlY3QsIFRleHRcbkRpYWxvZ3VlOiAwLDA6MDA6MDAuMDAsMDowMDo1NS4wMCxEZWZhdWx0LCwwLDAsMCwsV2F0Y2ggdGlsbCB0aGUgZW5kXG4iCiAgICB3aXRoIG9wZW4oInN1YnMuYXNzIiwgInciLCBlbmNvZGluZz0idXRmLTgiKSBhcyBmOgogICAgICAgIGYud3JpdGUoZmFsbGJhY2spCiAgICBwcmludCgiRkFMTEJBQ0sgc3VidGl0bGVzIHdyaXR0ZW4iKQo=\";\nlet music_url = \"\";\ntry { music_url = $input.first().json.music_url || $(\"Quality Gate1\").first().json.music_url || \"\"; } catch(e) {}\nlet total_scenes = 5;\ntry { total_scenes = $input.first().json.total_scenes || 5; } catch(e) {}\nreturn [{ json: { b64_script, music_url, total_scenes } }];"
+      },
+      "id": "576b2314-1b32-4ab5-910a-ddb394763231",
+      "name": "ASS Subtitle Generator1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && powershell -c \"Get-ChildItem 'part_*.mp4' | Sort-Object { [int]($_.BaseName -replace 'part_','') } | ForEach-Object { \\\"file '$($_.Name)'\\\" } | Set-Content list.txt\" && powershell -c \"Invoke-WebRequest -Uri '{{ $json.music_url }}' -OutFile 'background_music.mp3' -Headers @{'User-Agent'='Mozilla/5.0'}\" || echo Music download failed && ffmpeg -y -f concat -safe 0 -i list.txt -c:v libx264 -pix_fmt yuv420p -preset ultrafast -c:a aac temp_stitch.mp4 && ffmpeg -y -i temp_stitch.mp4 -map 0:a -c:a libmp3lame -q:a 2 full_audio.mp3 && powershell -c \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('{{ $json.b64_script }}')) | Set-Content -Encoding UTF8 whisper_sub.py\" && python whisper_sub.py && if not exist subs.ass echo [Script Info] > subs.ass"
+      },
+      "id": "f77ea6dd-2c7b-4c73-b8dd-d0fc61fff39d",
+      "name": "Stitch + Generate Subtitles1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d \"C:\\\\reddit vids n8n\\\\satisfying\" && ffmpeg -y -i temp_stitch.mp4 -stream_loop -1 -i background_music.mp3 -filter_complex \"[1:a]volume=0.15[bgm];[0:a][bgm]amix=inputs=2:duration=first[a];[0:v]vignette=PI/4,eq=contrast=1.1:saturation=0.9[v]\" -map \"[v]\" -map \"[a]\" -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac temp_pre_sub.mp4 && ffmpeg -y -i temp_pre_sub.mp4 -vf \"ass=subs.ass\" -c:v libx264 -pix_fmt yuv420p -c:a copy Final_Video_Captioned.mp4"
+      },
+      "id": "816fe299-d5e2-4ff4-b4b0-52f74b5179c0",
+      "name": "Final Mix + Caption Burn1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        128,
+        1312
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Chaos Seed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chaos Seed": {
+      "main": [
+        [
+          {
+            "node": "Reddit Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Scraper": {
+      "main": [
+        [
+          {
+            "node": "Filter Viral Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Viral Posts": {
+      "main": [
+        [
+          {
+            "node": "Visual Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Visual Director": {
+      "main": [
+        [
+          {
+            "node": "Script Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Script Writer": {
+      "main": [
+        [
+          {
+            "node": "AI Critic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Critic": {
+      "main": [
+        [
+          {
+            "node": "Quality Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Gate": {
+      "main": [
+        [
+          {
+            "node": "Scene Splitter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scene Splitter": {
+      "main": [
+        [
+          {
+            "node": "JSON Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Parser": {
+      "main": [
+        [
+          {
+            "node": "Split Scenes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Scenes": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Batches": {
+      "main": [
+        [
+          {
+            "node": "Generate TTS Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ASS Subtitle Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate TTS Audio": {
+      "main": [
+        [
+          {
+            "node": "Pexels Video Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pexels Video Search": {
+      "main": [
+        [
+          {
+            "node": "Smart Media Picker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Smart Media Picker": {
+      "main": [
+        [
+          {
+            "node": "Execute Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Download": {
+      "main": [
+        [
+          {
+            "node": "Prep Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Merge": {
+      "main": [
+        [
+          {
+            "node": "Execute Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Merge": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ASS Subtitle Generator": {
+      "main": [
+        [
+          {
+            "node": "Stitch + Generate Subtitles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stitch + Generate Subtitles": {
+      "main": [
+        [
+          {
+            "node": "Final Mix + Caption Burn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Mix + Caption Burn": {
+      "main": [
+        [
+          {
+            "node": "Archive & Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Visual Director",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Script Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Critic",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Scene Splitter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Vision": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Visual Director1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Creative": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Script Writer1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Critic": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Critic1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Logic": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Scene Splitter1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chaos Seed1": {
+      "main": [
+        [
+          {
+            "node": "Reddit Scraper1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Scraper1": {
+      "main": [
+        [
+          {
+            "node": "Filter Viral Posts1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Viral Posts1": {
+      "main": [
+        [
+          {
+            "node": "Visual Director1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Visual Director1": {
+      "main": [
+        [
+          {
+            "node": "Script Writer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Script Writer1": {
+      "main": [
+        [
+          {
+            "node": "AI Critic1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Critic1": {
+      "main": [
+        [
+          {
+            "node": "Quality Gate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Gate1": {
+      "main": [
+        [
+          {
+            "node": "Scene Splitter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scene Splitter1": {
+      "main": [
+        [
+          {
+            "node": "JSON Parser1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Parser1": {
+      "main": [
+        [
+          {
+            "node": "Split Scenes1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Scenes1": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Batches1": {
+      "main": [
+        [
+          {
+            "node": "Generate TTS Audio1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ASS Subtitle Generator1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate TTS Audio1": {
+      "main": [
+        [
+          {
+            "node": "Pexels Video Search1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pexels Video Search1": {
+      "main": [
+        [
+          {
+            "node": "Smart Media Picker1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Smart Media Picker1": {
+      "main": [
+        [
+          {
+            "node": "Execute Download1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Download1": {
+      "main": [
+        [
+          {
+            "node": "Prep Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Merge1": {
+      "main": [
+        [
+          {
+            "node": "Execute Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Merge1": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ASS Subtitle Generator1": {
+      "main": [
+        [
+          {
+            "node": "Stitch + Generate Subtitles1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stitch + Generate Subtitles1": {
+      "main": [
+        [
+          {
+            "node": "Final Mix + Caption Burn1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Mix + Caption Burn1": {
+      "main": [
+        [
+          {
+            "node": "Archive and Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "showcase-export"
+  }
+}

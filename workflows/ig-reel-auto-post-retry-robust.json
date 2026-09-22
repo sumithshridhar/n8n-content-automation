@@ -1,0 +1,751 @@
+{
+  "name": "IG Auto Reel Upload - Vivo Y33s Robust (First Video, retries)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -32
+      ],
+      "id": "438242d3-b0ae-4b35-8367-9eb74302702a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "id": "aed70998-057c-49ea-b5b9-23ca7da11891",
+      "name": "Wait for App Load",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        -64
+      ],
+      "webhookId": "app-load-wait"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse screen size and initialize workflow state\nconst raw = $input.first().json.output || '';\nconst m = raw.match(/(\\d+)\\s*x\\s*(\\d+)/i);\n\nlet width = 1080, height = 2408;\nif (m) {\n  width = parseInt(m[1], 10);\n  height = parseInt(m[2], 10);\n}\n\n// PRECISE COORDINATES based on actual screenshots (1080x2408)\nconst coordinates = {\n  // Bottom navigation bar (y ≈ 2336px)\n  HOME_TAB: { x: 0.092, y: 0.970 },           // Home icon: ~100px\n  SEARCH_TAB: { x: 0.273, y: 0.970 },         // Search icon: ~295px\n  CREATE_TAB: { x: 0.455, y: 0.970 },         // + Create: ~491px\n  REELS_TAB: { x: 0.636, y: 0.970 },          // Reels (Play): ~687px\n  PROFILE_TAB: { x: 0.818, y: 0.970 },        // Profile: ~883px\n  \n  // Top buttons\n  CREATE_BUTTON: { x: 0.089, y: 0.145 },      // + button top-left: ~96px, 349px\n  CLOSE_BUTTON: { x: 0.089, y: 0.145 },       // X close button: ~96px, 349px\n  BACK_BUTTON: { x: 0.089, y: 0.145 },        // Back arrow: ~96px, 349px\n  SETTINGS_BUTTON: { x: 0.944, y: 0.145 },    // Settings/gear: ~1020px, 349px\n  \n  // Gallery/Create screen (Image 4)\n  CAMERA_BUTTON: { x: 0.130, y: 0.375 },      // Camera button left side: ~140px, 903px\n  FIRST_VIDEO: { x: 0.730, y: 0.390 },        // First thumbnail top-right: ~788px, 939px\n  REEL_BUTTON: { x: 0.615, y: 0.970 },        // REEL button bottom: ~664px, 2336px\n  POST_BUTTON: { x: 0.498, y: 0.970 },        // POST button: ~538px, 2336px\n  STORY_BUTTON: { x: 0.557, y: 0.970 },       // STORY button: ~601px, 2336px\n  \n  // Edit screen (Image 1)\n  NEXT_BUTTON: { x: 0.740, y: 0.970 },        // Next button: ~799px, 2336px\n  EDIT_VIDEO_BTN: { x: 0.490, y: 0.970 },     // Edit video: ~529px, 2336px\n  \n  // Caption/Share screen (Image 2)\n  SHARE_BUTTON: { x: 0.702, y: 0.970 },       // Share button: ~758px, 2336px\n  SAVE_DRAFT: { x: 0.534, y: 0.970 },         // Save draft: ~577px, 2336px\n  CAPTION_FIELD: { x: 0.500, y: 0.462 },      // Caption input: ~540px, 1112px\n  TAG_PEOPLE: { x: 0.500, y: 0.570 },         // Tag people: ~540px, 1373px\n  ADD_LOCATION: { x: 0.500, y: 0.613 },       // Add location: ~540px, 1476px\n  \n  // Common\n  DISMISS_POPUP: { x: 0.500, y: 0.800 },      // Generic popup center\n  SCREEN_CENTER: { x: 0.500, y: 0.500 }       // Dead center\n};\n\nreturn {\n  width,\n  height,\n  coordinates,\n  retryCount: 0,\n  maxRetries: 50,\n  currentStep: 'INITIAL'\n};"
+      },
+      "id": "ee3ee8df-db2a-4d1a-839c-8d610e174ef2",
+      "name": "Initialize Workflow State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        864,
+        -96
+      ],
+      "id": "4e7eb329-059e-4f20-8220-5d68c263cf3d",
+      "name": "Vision Analysis"
+    },
+    {
+      "parameters": {
+        "command": "adb shell am start -n com.instagram.android/.activity.MainTabActivity"
+      },
+      "id": "401ff15a-e9fe-4f0d-9580-3825403a6ab8",
+      "name": "Open Instagram App2",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "command": "adb shell wm size"
+      },
+      "id": "f8a3a6b3-121f-45bd-909f-1e772e31ef28",
+      "name": "Get Screen Size3",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "command": "adb shell screencap -p /sdcard/screen.png && adb pull /sdcard/screen.png \"C:\\\\phone ss\\\\temp.png\""
+      },
+      "id": "dca5c9b6-a1e5-40ec-8d71-7767e241c1d5",
+      "name": "Capture Screenshot3",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "filePath": "C:\\phone ss\\temp.png"
+      },
+      "id": "6a46912d-4b82-4f02-b5d6-01b5788ecc88",
+      "name": "Read Screenshot3",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llava:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        912,
+        80
+      ],
+      "id": "94803afb-af77-4e05-92c1-6b422d520ab2",
+      "name": "Ollama Vision Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "adb shell monkey -p com.instagram.android -c android.intent.category.LAUNCHER 1"
+      },
+      "id": "1fe5f470-ecb1-4fa4-bba0-0a4552a2de35",
+      "name": "Open Instagram",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "877b2597-871e-401f-b811-27606ae441c0",
+      "name": "Wait 2s - after IG open",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        240
+      ],
+      "webhookId": "983c0284-3866-4bb3-b26d-f4e8c9945579"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 100 200"
+      },
+      "id": "19ee5934-fac1-475c-b3e8-fa314c0a419f",
+      "name": "Tap + Create",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        96,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "04225f4e-8032-488f-bfc9-65882d3b3e37",
+      "name": "Wait 2s - gallery load",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        352,
+        240
+      ],
+      "webhookId": "3f4ae0d2-9355-40f2-9043-661975153271"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 540 780"
+      },
+      "id": "236aba33-ee3f-48f8-9063-5773e90e87e3",
+      "name": "Tap 2nd Video",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        608,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "d260b052-546f-4823-9852-2b16c265232e",
+      "name": "Wait 2s - video selected",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        848,
+        240
+      ],
+      "webhookId": "153c1325-0ffd-45c0-b159-d3a904eafe83"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 950 2258"
+      },
+      "id": "9fce42fe-0a90-4530-a2e0-4947dfca308c",
+      "name": "Tap Next1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "c26ae356-d863-4810-99f4-3b0e92a05de3",
+      "name": "Wait 2s - next screen1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        240
+      ],
+      "webhookId": "f116fafb-5f13-4c43-bbd6-d01bfad9a40e"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 950 2285"
+      },
+      "id": "95893329-cd8c-42db-9638-0b04f03aab3e",
+      "name": "Tap Share1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "eab10af8-f88d-497a-95b2-0a22756e2620",
+      "name": "Wait 3s - video selected / editor load",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        352,
+        816
+      ],
+      "webhookId": "fe8dba38-08ad-4cb4-b929-47f8d5b41ef6"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 960 2060"
+      },
+      "id": "ac73106a-9988-4372-88b3-16923fe59e87",
+      "name": "Tap Next (attempt 1)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        608,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "2f6db735-0a26-40c3-95c0-17f85ea7986d",
+      "name": "Wait 1s - between next attempts",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        864,
+        752
+      ],
+      "webhookId": "18cd3d57-50b9-42fa-b757-3bd360d27d6f"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 960 2060"
+      },
+      "id": "9766d414-c9b4-41ce-9fff-6261c88ceb36",
+      "name": "Tap Next (attempt 2)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "254ac967-046e-47a7-9393-f3c9e8a9226f",
+      "name": "Wait 2s - after Next",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        752
+      ],
+      "webhookId": "6cddde83-6f31-4a4b-b343-d489b993aaea"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 820 2180"
+      },
+      "id": "6db2bc9a-2819-4eb3-b763-bbd25b6c3169",
+      "name": "Tap Share (attempt 1)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "e4a7c0e3-f7ce-4122-af6d-5393c5c4545c",
+      "name": "Wait 1s - between share attempts",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        816
+      ],
+      "webhookId": "20ae9e0f-280a-44dd-9020-f01c4cf17dc8"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 820 2180"
+      },
+      "id": "40b4895f-a413-429e-b33e-886e86df88a9",
+      "name": "Tap Share (attempt 2)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "command": "adb shell monkey -p com.instagram.android -c android.intent.category.LAUNCHER 1"
+      },
+      "id": "336ac866-ff2c-4352-9095-6a1427677288",
+      "name": "Open Instagram2",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "34a494f8-6b6e-433a-acd6-c79cea3b3ba1",
+      "name": "Wait 2s - after IG open2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        816
+      ],
+      "webhookId": "c6da110c-cd9d-4736-99f6-60d28159479b"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 100 200"
+      },
+      "id": "b530e884-23bf-408a-b823-9f21101f117d",
+      "name": "Tap + Create2",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "e0c72021-f645-4e29-a88b-ac0e4663c9de",
+      "name": "Wait 2s - gallery load2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        816
+      ],
+      "webhookId": "0ba67f88-fa62-470b-a169-6c33e07cf7e6"
+    },
+    {
+      "parameters": {
+        "command": "adb shell input tap 180 780"
+      },
+      "id": "ef619825-135f-4f20-b47d-3486c3255768",
+      "name": "Tap 1st Video1",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        112,
+        816
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Open Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for App Load": {
+      "main": [
+        [
+          {
+            "node": "Get Screen Size3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Workflow State": {
+      "main": [
+        [
+          {
+            "node": "Capture Screenshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open Instagram App2": {
+      "main": [
+        [
+          {
+            "node": "Wait for App Load",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Screen Size3": {
+      "main": [
+        [
+          {
+            "node": "Initialize Workflow State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Screenshot3": {
+      "main": [
+        [
+          {
+            "node": "Read Screenshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Screenshot3": {
+      "main": [
+        [
+          {
+            "node": "Vision Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Vision Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vision Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open Instagram": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s - after IG open",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s - after IG open": {
+      "main": [
+        [
+          {
+            "node": "Tap + Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap + Create": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s - gallery load",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s - gallery load": {
+      "main": [
+        [
+          {
+            "node": "Tap 2nd Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap 2nd Video": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s - video selected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s - video selected": {
+      "main": [
+        [
+          {
+            "node": "Tap Next1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap Next1": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s - next screen1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s - next screen1": {
+      "main": [
+        [
+          {
+            "node": "Tap Share1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3s - video selected / editor load": {
+      "main": [
+        [
+          {
+            "node": "Tap Next (attempt 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap Next (attempt 1)": {
+      "main": [
+        [
+          {
+            "node": "Wait 1s - between next attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1s - between next attempts": {
+      "main": [
+        [
+          {
+            "node": "Tap Next (attempt 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap Next (attempt 2)": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s - after Next",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s - after Next": {
+      "main": [
+        [
+          {
+            "node": "Tap Share (attempt 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap Share (attempt 1)": {
+      "main": [
+        [
+          {
+            "node": "Wait 1s - between share attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1s - between share attempts": {
+      "main": [
+        [
+          {
+            "node": "Tap Share (attempt 2)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open Instagram2": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s - after IG open2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s - after IG open2": {
+      "main": [
+        [
+          {
+            "node": "Tap + Create2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap + Create2": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s - gallery load2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s - gallery load2": {
+      "main": [
+        [
+          {
+            "node": "Tap 1st Video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tap 1st Video1": {
+      "main": [
+        [
+          {
+            "node": "Wait 3s - video selected / editor load",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "showcase-export"
+  }
+}

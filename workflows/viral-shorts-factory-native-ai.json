@@ -1,0 +1,729 @@
+{
+  "name": "Viral Shorts Factory v2.0 (Native AI)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        832
+      ],
+      "id": "e72d0f5b-a508-4bce-9ab3-82f854690730",
+      "name": "▶️ Start Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"SYSTEM: You are a VIRAL SCRIPTWRITER.\\n\\nYour opening line MUST BE EXACTLY: \" + $('0. Chaos Seed5').first().json.hook + \"\\n\\nTOPIC: \" + $('2. Filter Viral Posts3').first().json.topic + \"\\nVISUAL MOOD: \" + $json.text + \"\\n\\nWrite a 40-50 word script. Structure:\\n1. Start with the exact hook above\\n2. Add shocking fact with 'But here is the thing'\\n3. Build tension with 'And it gets worse'\\n4. End with 'Follow for part 2'\\n\\nRULES: Short punchy sentences. No emojis. Output ONLY script text.\" }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -2432,
+        224
+      ],
+      "id": "cf064418-f0b4-493f-9305-5d593545ff66",
+      "name": "4. Script Writer2"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        480
+      ],
+      "id": "cfac7aa8-26e7-4226-a92c-2a4cd6c666dd",
+      "name": "Model: Critic2",
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"SYSTEM: You are a viral content CRITIC.\\n\\nRate this script:\\n- Curiosity gap?\\n- Hook strength?\\n- Shareability?\\n\\nSCRIPT: \" + $json.text + \"\\n\\nOutput ONLY: APPROVE or REJECT\" }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -2112,
+        224
+      ],
+      "id": "8d0d6d22-6a45-4a92-9a29-6d4260453c4a",
+      "name": "5. AI Critic2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// QUALITY GATE: Always approve for now (simplified)\nconst scriptText = $('4. Script Writer2').first().json.text;\nconst seedData = $('0. Chaos Seed5').first().json;\n\nreturn [{\n  json: {\n    script: scriptText,\n    music_url: seedData.music_url\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        224
+      ],
+      "id": "6348d151-850d-4bf2-b0e7-ef065e466278",
+      "name": "6. Quality Check2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"SYSTEM: Split this script into 5-6 short scenes.\\n\\nSCRIPT: \" + $json.script + \"\\n\\nOutput JSON only:\\n{\\\"scenes\\\": [{\\\"index\\\": 1, \\\"sentence\\\": \\\"text\\\", \\\"visual\\\": \\\"keyword\\\"}]}\\n\\nVisual keywords: glitch, void, static, hallway, ocean, space, brain, mind, abstract\\nJSON ONLY\" }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -1712,
+        224
+      ],
+      "id": "9d614ca3-ce33-4489-87ac-89c574e0f84d",
+      "name": "7. Scene Splitter2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse JSON\nconst input = items[0].json.text;\nconst musicUrl = $('6. Quality Check2').first().json.music_url;\nlet data;\n\nconst pexelsMap = {\n  brain: 'neural network abstract', mind: 'galaxy mind', think: 'person thinking silhouette',\n  thought: 'abstract light rays', dream: 'surreal dream', abstract: 'abstract geometric 3d',\n  light: 'bokeh lights', dark: 'dark moody atmosphere', glitch: 'glitch art video',\n  void: 'black void abstract', static: 'tv static noise', hallway: 'dark hallway endless',\n  ocean: 'deep ocean dark', space: 'deep space stars', calm: 'calm nature loop'\n};\n\ntry {\n  let clean = input;\n  const thinkStart = clean.indexOf('<think>');\n  const thinkEnd = clean.indexOf('</think>');\n  if (thinkStart !== -1 && thinkEnd !== -1) clean = clean.substring(0, thinkStart) + clean.substring(thinkEnd + 8);\n  clean = clean.replace(/```json/g, '').replace(/```/g, '').trim();\n  const startIdx = clean.indexOf('{');\n  const endIdx = clean.lastIndexOf('}');\n  if (startIdx !== -1 && endIdx !== -1) data = JSON.parse(clean.substring(startIdx, endIdx + 1));\n} catch(e) { data = null; }\n\nif (!data || !data.scenes || data.scenes.length === 0) {\n  data = { scenes: [\n    { index: 1, sentence: 'Your mind is more powerful than you think.', visual: 'brain' },\n    { index: 2, sentence: 'This is what psychology says.', visual: 'mind' },\n    { index: 3, sentence: 'Studies have proven this.', visual: 'abstract' },\n    { index: 4, sentence: 'And it changes everything.', visual: 'light' },\n    { index: 5, sentence: 'Follow for more psychology facts.', visual: 'calm' }\n  ]};\n}\n\ndata.scenes = data.scenes.slice(0, 6).map(s => {\n  const visual = (s.visual || 'abstract').toLowerCase();\n  return { ...s, visual: pexelsMap[visual] || visual + ' aesthetic' };\n});\n\nreturn [{ json: { scenes: data.scenes, music_url: musicUrl } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1472,
+        224
+      ],
+      "id": "5f31de52-9365-402c-aeb6-b166511edf9f",
+      "name": "8. JSON Parser2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split scenes\nconst baseFolder = 'C:\\\\reddit vids n8n\\\\satisfying';\nconst scenes = $('8. JSON Parser2').first().json.scenes;\nconst musicUrl = $('8. JSON Parser2').first().json.music_url;\n\nreturn scenes.map((s, i) => {\n  const idx = s.index || (i + 1);\n  return {\n    json: {\n      index: idx,\n      sentence: s.sentence || 'Something is happening.',\n      visual: s.visual || 'abstract',\n      base_folder: baseFolder,\n      audio_filename: 'audio_' + idx + '.mp3',\n      visual_filename: 'scene_' + idx + '_visual.mp4',\n      music_url: musicUrl\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1232,
+        224
+      ],
+      "id": "56b855db-1ca1-402e-9aaa-ac3f7117d334",
+      "name": "9. Split Scenes2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// VIRAL ENGINE 6.1: SIMPLIFIED VERSION\nconst subreddits = ['psychology', 'todayilearned', 'interestingasfuck', 'Showerthoughts'];\nconst subreddit = subreddits[Math.floor(Math.random() * subreddits.length)];\n\nconst hooks = [\n  \"Psychology says if you can't stop thinking about someone...\",\n  \"Your brain is lying to you right now.\",\n  \"People who do THIS are secretly genius.\",\n  \"If someone does this, they secretly like you.\",\n  \"The dark truth about your personality.\"\n];\n\nconst musicUrls = [\n  \"https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/Kai_Engel/Satin/Kai_Engel_-_04_-_Interception.mp3\",\n  \"https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/Broke_For_Free/Slam_Dunks/Broke_For_Free_-_05_-_Something_Elated.mp3\"\n];\n\nconst hook = hooks[Math.floor(Math.random() * hooks.length)];\nconst musicUrl = musicUrls[Math.floor(Math.random() * musicUrls.length)];\nconst seed = Math.floor(Math.random() * 999999);\n\nreturn [{ json: { seed, subreddit, hook, music_url: musicUrl, retry_count: 0 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3424,
+        224
+      ],
+      "id": "bdda509a-ab93-4d99-a07c-cd458c630873",
+      "name": "0. Chaos Seed5"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.reddit.com/r/{{ $json.subreddit }}/hot.json?limit=25",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "ViralBot/1.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3184,
+        224
+      ],
+      "id": "bea0311c-5e0f-49e9-a8d1-25645cc02428",
+      "name": "1. Reddit Scraper3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FILTER VIRAL POSTS\nconst MIN_UPVOTES = 3000;\nconst data = items[0].json;\nconst seedData = $('0. Chaos Seed5').first().json;\n\nlet topic = 'Signs of High Intelligence';\ntry {\n  const children = data.data && data.data.children ? data.data.children : [];\n  const posts = children.map(c => c.data).filter(p => p.ups >= MIN_UPVOTES && !p.stickied && !p.over_18).slice(0, 10);\n  if (posts.length > 0) {\n    topic = posts[Math.floor(Math.random() * posts.length)].title;\n  }\n} catch(e) {}\n\nreturn [{\n  json: {\n    topic: topic,\n    hook: seedData.hook,\n    music_url: seedData.music_url,\n    seed: seedData.seed,\n    retry_count: seedData.retry_count\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2944,
+        224
+      ],
+      "id": "9f19f3ca-aca1-4288-9940-2dd7d76ed803",
+      "name": "2. Filter Viral Posts3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"SYSTEM: You are a VISUAL DIRECTOR for viral short videos.\\n\\nTOPIC: \" + $json.topic + \"\\n\\nCreate a 10-word description of a mesmerizing visual. Example: Endless empty hallway with flickering lights.\" }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -2752,
+        224
+      ],
+      "id": "f121e0cd-0190-4a52-9824-b050f06995cc",
+      "name": "3. Vision Analysis3"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -2768,
+        512
+      ],
+      "id": "56faf507-0845-4b85-afe4-ebdd6ab257a0",
+      "name": "Model: Vision1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -2448,
+        496
+      ],
+      "id": "72ea8917-8167-4bc6-b9f9-3b5b1fa3fc76",
+      "name": "Model: Creative1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:7b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -1744,
+        432
+      ],
+      "id": "fad1c68b-e6dd-421e-9008-81a3216a19be",
+      "name": "Model: Logic1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "y1JkstnmCx44t7Br",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "={{ \"cd /d \\\"C:\\\\reddit vids n8n\\\\satisfying\\\" && (echo file 'part_1.mp4' & echo file 'part_2.mp4' & echo file 'part_3.mp4' & echo file 'part_4.mp4' & echo file 'part_5.mp4' & echo file 'part_6.mp4') > list.txt && powershell -c \\\"$urls = @('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'); $rnd = Get-Random -InputObject $urls; Invoke-WebRequest -Uri $rnd -OutFile 'background_music.mp3'\\\" && ffmpeg -y -f concat -safe 0 -i list.txt -c:v libx264 -pix_fmt yuv420p -preset ultrafast -c:a aac temp_stitch.mp4 && ffmpeg -y -i temp_stitch.mp4 -map 0:a -c:a libmp3lame -q:a 2 full_audio.mp3 && python -c \\\"import base64; open('gen_subs.py','wb').write(base64.b64decode('\" + $json.b64_script + \"'))\\\" && python gen_subs.py && type subs.ass\" }}",
+        "cwd": "C:\\reddit vids n8n\\satisfying"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        16
+      ],
+      "id": "3e5ad5d8-5133-417c-a854-76e871993417",
+      "name": "15. Stitch + Generate ASS2",
+      "credentials": {
+        "sshPassword": {
+          "id": "AyjcOUxEyZ3fHNdL",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "={{ \"cd /d \\\"C:\\\\reddit vids n8n\\\\satisfying\\\" && ffmpeg -y -i temp_stitch.mp4 -stream_loop -1 -i background_music.mp3 -filter_complex \\\"[1:a]volume=0.15[bgm];[0:a][bgm]amix=inputs=2:duration=first[a];[0:v]vignette=PI/4,eq=contrast=1.1:saturation=0.9[v]\\\" -map \\\"[v]\\\" -map \\\"[a]\\\" -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac temp_pre_sub.mp4 && ffmpeg -y -i temp_pre_sub.mp4 -vf \\\"ass=subs.ass\\\" -c:v libx264 -pix_fmt yuv420p -c:a copy Final_Video_Captioned.mp4\" }}",
+        "cwd": "C:\\reddit vids n8n\\satisfying"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "a5bb5ef1-44d1-42f1-a4da-9c5f8c1da967",
+      "name": "16. Final Mix + ASS Burn2",
+      "credentials": {
+        "sshPassword": {
+          "id": "AyjcOUxEyZ3fHNdL",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "={{ \"mkdir \\\"C:\\\\reddit vids n8n\\\\final\\\" 2>nul & copy /y \\\"C:\\\\reddit vids n8n\\\\satisfying\\\\Final_Video_Captioned.mp4\\\" \\\"C:\\\\reddit vids n8n\\\\final\\\\Reddit_Video_\" + $now.format('yyyy-MM-dd_HH-mm-ss') + \".mp4\\\" & cd /d \\\"C:\\\\reddit vids n8n\\\\satisfying\\\" & del /q *.mp3 *.ass *.srt *.txt *.py part_*.mp4 temp_stitch.mp4 background_music.mp3 full_audio.mp3 temp_pre_sub.mp4 Final_Video_Captioned.mp4 scene_*.jpg scene_*.mp4\" }}",
+        "cwd": "C:\\reddit vids n8n\\satisfying"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ddf2e2ca-8dae-4a75-8b3e-2fcc2b1ac007",
+      "name": "17. Archive & Cleanup2",
+      "credentials": {
+        "sshPassword": {
+          "id": "AyjcOUxEyZ3fHNdL",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "={{ \"echo \\\"\" + $json.sentence.replace(/\\\"/g, \"'\").replace(/\\n/g, ' ') + \"\\\" | piper -m \\\"C:\\\\Users\\\\Sumith Shridhar\\\\OneDrive\\\\Desktop\\\\multi models\\\\scripts\\\\en_US-ryan-high.onnx\\\" -f \\\"\" + $json.base_folder + \"\\\\temp_\" + $json.audio_filename + \".wav\\\" && ffmpeg -y -i \\\"\" + $json.base_folder + \"\\\\temp_\" + $json.audio_filename + \".wav\\\" \\\"\" + $json.base_folder + \"\\\\\" + $json.audio_filename + \"\\\" && del \\\"\" + $json.base_folder + \"\\\\temp_\" + $json.audio_filename + \".wav\\\"\" }}",
+        "cwd": "C:\\Users\\Sumith Shridhar"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        208
+      ],
+      "id": "21a81854-26a7-4b25-b6b1-b31a7bb2aaf4",
+      "name": "8. Generate Audio2",
+      "credentials": {
+        "sshPassword": {
+          "id": "AyjcOUxEyZ3fHNdL",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/videos/search?query={{ $('Loop Batches7').first().json.visual }}&per_page=15&orientation=portrait",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "YOUR_PEXELS_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        208
+      ],
+      "id": "1fd1ce0c-b258-47d0-9b5e-e741f5d03a21",
+      "name": "9. Pexels Video Search2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pick best video from Pexels API response\nconst loopData = $('Loop Batches7').first().json;\nconst folder = loopData.base_folder;\nconst idx = loopData.index;\nconst visFile = 'scene_' + idx + '_visual.mp4';\n\nconst pexelsData = items[0].json;\nconst videos = pexelsData.videos || [];\n\nlet cmd;\nif (videos.length > 0) {\n  const pick = videos[Math.floor(Math.random() * videos.length)];\n  const videoFiles = pick.video_files || [];\n  const hdVideo = videoFiles.find(f => f.quality === 'hd' && f.width >= 720) || videoFiles[0];\n  const url = hdVideo ? hdVideo.link : null;\n  \n  if (url) {\n    cmd = 'powershell -Command \"Invoke-WebRequest -Uri \\'' + url + '\\' -OutFile \\'' + folder + '\\\\\\\\' + visFile + '\\'\"';\n  } else {\n    cmd = 'ffmpeg -y -f lavfi -i \"color=c=purple:s=720x1280:d=6\" -c:v libx264 -pix_fmt yuv420p \"' + folder + '\\\\\\\\' + visFile + '\"';\n  }\n} else {\n  cmd = 'ffmpeg -y -f lavfi -i \"color=c=purple:s=720x1280:d=6\" -c:v libx264 -pix_fmt yuv420p \"' + folder + '\\\\\\\\' + visFile + '\"';\n}\n\nreturn [{ json: { ...loopData, download_cmd: cmd, visual_filename: visFile } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        208
+      ],
+      "id": "bc4d6425-f538-4b18-a64e-0e77efd36767",
+      "name": "10. Smart Media Picker2"
+    },
+    {
+      "parameters": {
+        "command": "={{ $json.download_cmd }}",
+        "cwd": "C:\\reddit vids n8n\\satisfying"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        192
+      ],
+      "id": "f8c36342-6132-45a2-9dbb-496631f2d040",
+      "name": "11. Execute Download2",
+      "credentials": {
+        "sshPassword": {
+          "id": "AyjcOUxEyZ3fHNdL",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prep merge command\nlet d = items[0].json;\nif (!d.base_folder) d = { ...d, ...$('Loop Batches7').first().json };\n\nconst folder = d.base_folder || 'C:\\\\\\\\reddit vids n8n\\\\\\\\satisfying';\nconst visual = folder + '\\\\\\\\' + d.visual_filename;\nconst audio = folder + '\\\\\\\\' + d.audio_filename;\nconst output = folder + '\\\\\\\\part_' + (d.index || 1) + '.mp4';\n\nconst cmd = 'ffmpeg -y -stream_loop -1 -i \"' + visual + '\" -i \"' + audio + '\" -map 0:v -map 1:a -vf \"scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,setsar=1:1,eq=contrast=1.1:brightness=-0.05:saturation=0.9\" -c:v libx264 -preset ultrafast -r 30 -c:a aac -shortest \"' + output + '\"';\n\nreturn [{ json: { merge_cmd: cmd, folder: folder, music_url: d.music_url } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        192
+      ],
+      "id": "9be16a04-d53c-425c-b83f-9f35fc569cdc",
+      "name": "12. Prep Merge2"
+    },
+    {
+      "parameters": {
+        "command": "={{ $json.merge_cmd }}",
+        "cwd": "C:\\reddit vids n8n\\satisfying"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        416,
+        192
+      ],
+      "id": "c9bdf86c-7c61-4f09-acd4-592cbba944aa",
+      "name": "13. Execute Merge2",
+      "credentials": {
+        "sshPassword": {
+          "id": "AyjcOUxEyZ3fHNdL",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ASS Subtitle Script with Karaoke\nconst script = `\nimport whisper, math\n\ndef format_time_ass(seconds):\n    h = int(seconds // 3600)\n    m = int((seconds % 3600) // 60)\n    s = int(seconds % 60)\n    cs = int((seconds - int(seconds)) * 100)\n    return \"{:01}:{:02}:{:02}.{:02}\".format(h, m, s, cs)\n\ntry:\n    print(\"Loading Whisper...\")\n    model = whisper.load_model('base')\n    result = model.transcribe('full_audio.mp3', word_timestamps=True)\n    \n    # Write ASS file header\n    with open('subs.ass', 'w', encoding='utf-8') as f:\n        f.write('[Script Info]' + chr(10))\n        f.write('Title: Viral Captions' + chr(10))\n        f.write('ScriptType: v4.00+' + chr(10))\n        f.write('PlayResX: 720' + chr(10))\n        f.write('PlayResY: 1280' + chr(10) + chr(10))\n        f.write('[V4+ Styles]' + chr(10))\n        f.write('Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding' + chr(10))\n        f.write('Style: Viral,Impact,48,&H00FFFF,&H0000FF,&H000000,&H80000000,1,0,0,0,100,100,0,0,1,3,0,2,10,10,120,1' + chr(10) + chr(10))\n        f.write('[Events]' + chr(10))\n        f.write('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text' + chr(10))\n        \n        all_words = []\n        for segment in result['segments']:\n            if 'words' in segment:\n                all_words.extend(segment['words'])\n            else:\n                all_words.append({'word': segment['text'], 'start': segment['start'], 'end': segment['end']})\n        \n        CHUNK_SIZE = 2\n        for i in range(0, len(all_words), CHUNK_SIZE):\n            chunk = all_words[i:i+CHUNK_SIZE]\n            if not chunk: continue\n            text = ' '.join([w['word'].strip() for w in chunk]).upper()\n            start = format_time_ass(chunk[0]['start'])\n            end = format_time_ass(chunk[-1]['end'])\n            \n            # Build karaoke text\n            ktext = ''\n            for w in chunk:\n                dur = int((w['end'] - w['start']) * 100)\n                ktext += '{' + chr(92) + 'k' + str(dur) + '}' + w['word'].strip().upper() + ' '\n            \n            f.write('Dialogue: 0,' + start + ',' + end + ',Viral,,0,0,0,,' + ktext.strip() + chr(10))\n    \n    print('SUCCESS_ASS_GENERATED')\nexcept Exception as e:\n    print('ERROR: ' + str(e))\n`;\n\nconst b64 = Buffer.from(script).toString('base64');\nreturn [{ json: { b64_script: b64 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        16
+      ],
+      "id": "f724363a-3067-4b0f-863a-c671a3e7f16a",
+      "name": "14. ASS Script2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -976,
+        208
+      ],
+      "id": "9cec7464-7a35-4245-b8e5-5664f66ac7d7",
+      "name": "Loop Batches7"
+    }
+  ],
+  "connections": {
+    "▶️ Start Workflow": {
+      "main": [
+        []
+      ]
+    },
+    "4. Script Writer2": {
+      "main": [
+        [
+          {
+            "node": "5. AI Critic2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Critic2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "5. AI Critic2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. AI Critic2": {
+      "main": [
+        [
+          {
+            "node": "6. Quality Check2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Quality Check2": {
+      "main": [
+        [
+          {
+            "node": "7. Scene Splitter2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Scene Splitter2": {
+      "main": [
+        [
+          {
+            "node": "8. JSON Parser2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. JSON Parser2": {
+      "main": [
+        [
+          {
+            "node": "9. Split Scenes2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Split Scenes2": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "0. Chaos Seed5": {
+      "main": [
+        [
+          {
+            "node": "1. Reddit Scraper3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Reddit Scraper3": {
+      "main": [
+        [
+          {
+            "node": "2. Filter Viral Posts3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Filter Viral Posts3": {
+      "main": [
+        [
+          {
+            "node": "3. Vision Analysis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Vision Analysis3": {
+      "main": [
+        [
+          {
+            "node": "4. Script Writer2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Vision1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "3. Vision Analysis3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Creative1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "4. Script Writer2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model: Logic1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "7. Scene Splitter2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15. Stitch + Generate ASS2": {
+      "main": [
+        [
+          {
+            "node": "16. Final Mix + ASS Burn2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16. Final Mix + ASS Burn2": {
+      "main": [
+        [
+          {
+            "node": "17. Archive & Cleanup2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Generate Audio2": {
+      "main": [
+        [
+          {
+            "node": "9. Pexels Video Search2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Pexels Video Search2": {
+      "main": [
+        [
+          {
+            "node": "10. Smart Media Picker2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Smart Media Picker2": {
+      "main": [
+        [
+          {
+            "node": "11. Execute Download2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Execute Download2": {
+      "main": [
+        [
+          {
+            "node": "12. Prep Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12. Prep Merge2": {
+      "main": [
+        [
+          {
+            "node": "13. Execute Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13. Execute Merge2": {
+      "main": [
+        [
+          {
+            "node": "Loop Batches7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14. ASS Script2": {
+      "main": [
+        [
+          {
+            "node": "15. Stitch + Generate ASS2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Batches7": {
+      "main": [
+        [
+          {
+            "node": "14. ASS Script2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8. Generate Audio2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "showcase-export"
+  }
+}
