@@ -1,34 +1,99 @@
-# n8n Content Automation
+# n8n content automation
 
-Three n8n workflows from a Reddit-to-Shorts content pipeline that has run unattended on a scheduler.
-Each one solves a different reliability problem: not "can it post a video" but "will it still work at 3am with no one watching."
+Three n8n workflow exports from a Reddit-to-Shorts video pipeline, plus tests that check them.
 
-Exported directly from n8n (`workflow_entity.nodes` / `.connections`), with one hardcoded API key redacted (`YOUR_PEXELS_API_KEY` — drop in your own [Pexels](https://www.pexels.com/api/) key to run it). No other secrets in these files; real credentials live in n8n's separate credential store, not in the workflow JSON.
+The pipeline takes a popular Reddit topic and has local LLMs write a short script. It then makes a voice-over and picks stock footage for each scene, and stitches everything into a captioned 720x1280 video. A separate workflow taps through Instagram on an Android phone to post a finished video.
 
-## 1. [`faceless-yt-shorts-factory.json`](workflows/faceless-yt-shorts-factory.json) — the generator-critic content pipeline
+## Read this first: status of each export
 
-49 nodes. Reddit scraper → viral-post filter → a **generate → critique → regenerate** loop, not a single LLM call:
+I checked these files by reading the JSON and by running the Code-node JavaScript in a test harness. I did not run the workflows end to end from this repo. Reading them shows that only one is close to runnable. The list is below, and each item has a test in `tests/known-issues.test.mjs`.
 
-`Visual Director → Script Writer → AI Critic → Quality Gate` (repeated), then `Scene Splitter → JSON Parser → Split Scenes`, looping batches through TTS audio generation, ASS subtitle generation, a Pexels stock-video search per scene, then FFmpeg-driven stitching, caption burn-in, and archive/cleanup.
+| File | Nodes | What it is | State of this export |
+|---|---|---|---|
+| [`viral-shorts-factory-native-ai.json`](workflows/viral-shorts-factory-native-ai.json) | 26 | The full pipeline. Every LLM call goes to local Ollama. Heavy steps run over SSH. | **Closest to runnable.** The Start node is not connected to anything. Execute it from `0. Chaos Seed5`. |
+| [`faceless-yt-shorts-factory.json`](workflows/faceless-yt-shorts-factory.json) | 49 | Two copies of the pipeline on one canvas. Copy 1 uses Gemini. Copy 2 (node names end in `1`) uses local Ollama. | **Not runnable as exported.** Details below. |
+| [`ig-reel-auto-post-retry-robust.json`](workflows/ig-reel-auto-post-retry-robust.json) | 31 | Posts a video to Instagram by sending `adb` taps to an Android phone. | The trigger reaches 10 blind-tap nodes. The screenshot, vision and retry nodes (the "robust" part) are not connected to it. |
 
-The critic isn't decorative — its output actually gates whether a script proceeds or gets regenerated. Model calls split across Google Gemini (script quality needs a stronger model) and four local Ollama roles (Vision, Creative, Critic, Logic) so the routine, high-volume steps don't hit a paid API. `n8n-nodes-base.code` shows up 16 times: most of the actual pipeline logic (parsing, batching, media selection) is hand-written JS, not node config.
+## Why it is worth a look
 
-## 2. [`viral-shorts-factory-native-ai.json`](workflows/viral-shorts-factory-native-ai.json) — the same pipeline, fully local and remote-executed
+- It shows a whole content pipeline built from free parts: public Reddit JSON, local LLMs (Ollama), a Pexels key, ffmpeg and Whisper. No paid LLM API is used on the Ollama paths.
+- It shows several n8n patterns: LLM chains, Code nodes holding real logic, a batch loop, shell and SSH execution, and phone control over `adb`.
+- The tests document what is broken, and show how to unit-test n8n Code nodes without running n8n.
 
-26 nodes. Same shape as #1 (scrape → filter → generate/critique/split → TTS → subtitles → stitch), rebuilt with two changes: every LLM call goes through local Ollama models only (no cloud LLM dependency), and every heavy step (`Generate Audio`, `Stitch + Generate ASS`, `Final Mix + ASS Burn`, `Execute Merge`) runs over **SSH** instead of a local `executeCommand`. That split matters: the n8n orchestrator can run on a small always-on box while the actual TTS/video rendering happens on a separate GPU machine it reaches over SSH.
+## Architecture (viral-shorts-factory-native-ai)
 
-## 3. [`ig-reel-auto-post-retry-robust.json`](workflows/ig-reel-auto-post-retry-robust.json) — vision-verified retry-robust phone automation
+```
+0 Chaos Seed ─► 1 Reddit Scraper ─► 2 Filter Viral Posts ─► 3 Vision Analysis (LLM) ─► 4 Script Writer (LLM)
+  random subreddit,   hot.json,        3000+ upvotes, not        a 10-word visual          40-50 word script
+  hook, music         no login         pinned or NSFW            mood                      with a fixed hook
+                                                                                              │
+   ┌──────────────────────────────────────────────────────────────────────────────────────────┘
+   ▼
+5 AI Critic (LLM) ─► 6 Quality Check ─► 7 Scene Splitter (LLM) ─► 8 JSON Parser ─► 9 Split Scenes ─► Loop Batches
+  APPROVE/REJECT      always passes        5-6 scenes as JSON       fallback scenes     one item per        │
+  (not used yet)      the script on                                 if the JSON is bad  scene               │
+                                                                                                           │
+   for each scene (loop output)                                                                            │ when all scenes are done
+   8 Generate Audio (Piper, over SSH)                                                                      │
+   9 Pexels search ─► 10 pick an HD clip ─► 11 download ─► 12/13 merge audio + clip ─► back to the loop    │
+                                                                                                           ▼
+   14 build the Whisper caption script ─► 15 stitch parts, add music, make captions ─► 16 mix + burn captions ─► 17 archive and clean up
+```
 
-31 nodes, `executeCommand` (ADB) driving a real Android phone. Blind coordinate-tapping breaks the moment a UI shifts a few pixels, so this workflow reads the screen back before it decides what to do next:
+The two Code-node steps with real logic are `8. JSON Parser` (strips `<think>` blocks and code fences, caps scenes at 6, maps keywords to search terms, falls back to 5 canned scenes) and `10. Smart Media Picker` (prefers an HD clip at least 720 px wide, makes a placeholder clip if there are no results).
 
-`Open Instagram → wait for load → tap Create → select video → Capture Screenshot → Read Screenshot → Vision Analysis (local Ollama vision model) → tap Next (attempt 1, then attempt 2 with a wait between) → tap Share (attempt 1, then attempt 2)`.
+## What you would need to run it
 
-Every risky tap is paired with a screenshot-and-verify step and a numbered retry, rather than one shot with no fallback — the same pattern that makes the content pipeline itself safe to leave running unattended. (Built for personal-account automation; check a platform's terms before pointing this at an account you don't own.)
+This is read from the nodes, not from a run.
 
-## Stack
+- **n8n.** The exports do not record which version made them. I confirmed three n8n behaviours behind the known problems (the Loop node's output order, the Wait node's defaults, and what Execute Command returns) in the source of n8n 2.6.4.
+- **Windows.** The commands use `cmd.exe` and PowerShell (`cd /d`, `copy`, `del`). The folder `C:\reddit vids n8n\satisfying` must exist. For the viral workflow this is on the SSH target.
+- **Ollama** with `deepseek-r1:7b`. The IG vision node uses `llava:latest`.
+- **Piper** and the voice file `en_US-ryan-high.onnx` at the hard-coded path (viral workflow). The faceless workflow instead calls `generate_voice_kokoro.py`, which is not in this repo.
+- **ffmpeg** on the path, and **Python** with `openai-whisper`.
+- **A Pexels API key.** Replace `YOUR_PEXELS_API_KEY` in the Authorization header of the Pexels node.
+- **n8n credentials** for Ollama and SSH (password login). Credentials are included only as references (id and name), never as values.
+- **For the IG workflow:** an Android phone with USB debugging, `adb` on the path, and the folder `C:\phone ss`. Tap positions are for a 1080x2408 screen.
 
-n8n · LangChain nodes for n8n · Ollama (local LLMs) · Google Gemini · Pexels API · FFmpeg · ADB · SSH
+Then import a file with `Import from File` in n8n, fix the credentials, and run it.
 
-## Import
+## Known problems
 
-Each file is a standard n8n workflow export — `Import from File` in the n8n UI, or drag it onto the canvas. You'll need your own credentials wired up (Reddit, Pexels, Ollama endpoint, SSH target) and Ollama models pulled locally.
+Found by reading the exports. None are fixed yet.
+
+- **The manual trigger does not start the whole pipeline in any of the three.** Viral: it connects to nothing. Faceless: it feeds copy 1, whose Code nodes are almost all empty. IG: it reaches 10 of the 30 flow nodes.
+- **The critic does not decide anything.** In the viral workflow `6. Quality Check` says "Always approve for now". In faceless copy 2 `Quality Gate1` returns `approved: true` every time. There is no loop back to regenerate a rejected script.
+- **The faceless export is missing parts.** Seven of the eight Code nodes in copy 1 are empty, and none of the 8 LLM nodes (4 in each copy) has a prompt. Its scene loop has the `done` and `loop` outputs the wrong way round. `Prep Merge1` reads fields that the Execute Command node before it does not pass on, so it builds a command containing `undefined`.
+- **The viral stitch step lists exactly six parts** (`part_1` to `part_6`), but the splitter can return five scenes and the fallback has five.
+- **IG:** several Wait nodes are labelled with a time that differs from their setting (for example "Wait 2s" is set to 5 seconds, "Wait 3s" waits 1 second). The vision node gets a screenshot with no instruction, and its answer is not used.
+- **Model text goes into shell commands.** Only double quotes and line breaks are replaced, so something like `%USERNAME%` in a script would be expanded by `cmd.exe`. Download links from the Pexels response are also placed into PowerShell commands.
+- **Cleanup deletes by wildcard** (`*.txt`, `*.py`, `*.mp3`) in a fixed working folder, and nothing clears leftover `part_*.mp4` files at the start of a run. A failed run can leave parts that the next run stitches in.
+- **No schedule trigger.** All three start from a manual trigger.
+- **Local details are in the files.** A Windows user folder is hard-coded in 4 values.
+
+Before using any of this, check the terms of Reddit, Pexels, the music sources and Instagram. Automating a personal Instagram account may break its terms.
+
+## Security
+
+No API keys, tokens, passwords or webhook URLs are in the files. The Pexels key is a placeholder. The tests scan for common secret formats and check that every Authorization header is a `YOUR_...` placeholder.
+
+## Tests
+
+No install step and no dependencies. Needs Node's built-in test runner. Written and run on Node 24.
+
+```bash
+npm test        # or: node --test
+```
+
+- `structure.test.mjs`: valid JSON, unique node names, valid connections, credentials are references only, no secrets.
+- `code-nodes.test.mjs`: runs the JavaScript of the Code nodes in a sandbox with mocked n8n globals. It checks things like the upvote filter, JSON parsing and fallbacks, HD clip choice, and that the embedded Python caption script is valid.
+- `known-issues.test.mjs`: one test per problem above, named `GAP: ...`. Each states the behaviour we want and is shown as TODO until it is fixed.
+
+Expected result: `fail 0`, with 14 TODO.
+
+## Files
+
+```
+workflows/   the three n8n exports
+tests/       helpers.mjs, structure.test.mjs, code-nodes.test.mjs, known-issues.test.mjs
+```

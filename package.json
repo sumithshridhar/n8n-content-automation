@@ -1,0 +1,8 @@
+{
+  "name": "n8n-content-automation",
+  "private": true,
+  "description": "n8n workflow exports for a Reddit-to-Shorts pipeline, with tests that check them",
+  "scripts": {
+    "test": "node --test"
+  }
+}
